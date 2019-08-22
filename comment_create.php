@@ -2,20 +2,20 @@
 require_once './db.php';
 ?>
 <?php //获取栏目信息
-$category = $dbh->query('select * from wp_terms');
-$html = '';
-foreach($category as $row){
-    $html .= "<div style='margin: 5px;font-size: 16px;height:31px;'>".$row['name']."&nbsp;&nbsp;&nbsp;<input type='text' class='inputCate' name='target[]' style='position: absolute;height: 30px;right: 34%;width: 350px;' data-id='".$row['term_id']."'  /></div>";
-}
-$html .= "<div class='col-sm-7' style='margin:20px;'><button onclick='commentCate()' class='btn btn-success  center' name='btn_save' id='btn_save' style='font-size:18px'>提交</button></div>";
+//$category = $dbh->query('select * from wp_terms');
+//$html = '';
+//foreach($category as $row){
+//    $html .= "<div style='margin: 5px;font-size: 16px;height:31px;'>".$row['name']."&nbsp;&nbsp;&nbsp;<input type='text' class='inputCate' name='target[]' style='position: absolute;height: 30px;right: 34%;width: 350px;' data-id='".$row['term_id']."'  /></div>";
+//}
+//$html .= "<div class='col-sm-7' style='margin:20px;'><button onclick='commentCate()' class='btn btn-success  center' name='btn_save' id='btn_save' style='font-size:18px'>提交</button></div>";
 ?>
 <?php //获取文章
-$category = $dbh->query('select ID,post_title from wp_posts');
-$post = '';
-foreach($category as $row){
-    $post .= "<div style='margin: 5px;font-size: 16px;height:31px;'>".$row['post_title']."&nbsp;&nbsp;&nbsp;<input type='text' class='inputPost' name='target[]' data-id='".$row['ID']."' style='position: absolute;height: 30px;right: 34%;width: 350px;'  /></div>";
-}
-$post .= "<div class='col-sm-7' style='margin:20px;'><button onclick='commentPost()'  class='btn btn-success  center' name='btn_save' id='btn_save' style='font-size:18px'>提交</button></div>";
+//$category = $dbh->query('select ID,post_title from wp_posts');
+//$post = '';
+//foreach($category as $row){
+//    $post .= "<div style='margin: 5px;font-size: 16px;height:31px;'>".$row['post_title']."&nbsp;&nbsp;&nbsp;<input type='text' class='inputPost' name='target[]' data-id='".$row['ID']."' style='position: absolute;height: 30px;right: 34%;width: 350px;'  /></div>";
+//}
+//$post .= "<div class='col-sm-7' style='margin:20px;'><button onclick='commentPost()'  class='btn btn-success  center' name='btn_save' id='btn_save' style='font-size:18px'>提交</button></div>";
 ?>
 
 <?php //文章添加评论
@@ -243,13 +243,13 @@ $post .= "<div class='col-sm-7' style='margin:20px;'><button onclick='commentPos
                 <tr>
                     <td>
                         &nbsp;&nbsp;&nbsp;<button class="btn btn-success  center" onclick="getContent(1)">开启</button>
-                        <div id="postContent" style="display: none;"><?php echo $post?></div>
                         &nbsp;&nbsp;&nbsp;<button class="btn btn-success  center" onclick="getContent(4)">关闭</button>
+                        &nbsp;&nbsp;&nbsp;<button class="btn btn-success  center" onclick="addInput(1)">添加</button>
                     </td>
                     <td>
                         &nbsp;&nbsp;&nbsp;<button class="btn btn-success  center" onclick="getContent(2)">开启</button>
-                        <div id="category" style="display: none;"><?php echo $html?></div>
                         &nbsp;&nbsp;&nbsp;<button class="btn btn-success  center" onclick="getContent(4)">关闭</button>
+                        &nbsp;&nbsp;&nbsp;<button class="btn btn-success  center" onclick="addInput(2)">添加</button>
                     </td>
                     <td>
                         &nbsp;&nbsp;&nbsp;<button class="btn btn-success  center" onclick="getContent(3)">开启</button>
@@ -260,29 +260,40 @@ $post .= "<div class='col-sm-7' style='margin:20px;'><button onclick='commentPos
             <div id="contentData" style="display: none;width: 100%;">
 
             </div>
+            <div class='col-sm-7' id="dataButton" style='margin:20px;'></div>
         </div>
     </div></div>
 <?php include("./js.php"); ?>
 
 <script>
     function getContent(type){
+        //type 1-文章添加 2-标签栏目添加 3-时间段添加 4-关闭
         if(type ==4){
+            $('#dataButton').html('');
             $('#contentData').css('display','none')
         }
         if(type ==1){
-            var postContent = $('#postContent').html();
+            // var postContent = $('#postContent').html();
+            var postContent = "<div style='margin: 5px;font-size: 16px;height:31px;'><input style='height: 30px;width: 350px;' type='text' placeholder='请填写文章ID' class='postId' oninput = \"value=value.replace(/[^\\d]/g,'')\"/> &nbsp;&nbsp;&nbsp;<input type='text' class='inputPost' name='target[]'  style='position: absolute;height: 30px;right: 34%;width: 350px;'  /></div>";
             $('#contentData').html(postContent);
+            var but = "<button onclick='commentPost()' class='btn btn-success  center' name='btn_save' id='btn_save' style='font-size:18px'>提交</button>";
+            $('#dataButton').html(but);
             $('#contentData').css('display','block')
         }
         if(type ==2){
-            var html = $('#category').html();
+            // var html = $('#category').html();
+            var html  = "<div style='margin: 5px;font-size: 16px;height:31px;'><input style='height: 30px;width: 350px;' type='text' placeholder='请填写栏目标签ID' class='cateId' oninput = \"value=value.replace(/[^\\d]/g,'')\" /> &nbsp;&nbsp;&nbsp;<input type='text' class='inputCate' name='target[]'  style='position: absolute;height: 30px;right: 34%;width: 350px;'  /></div>";
             $('#contentData').html(html);
+            var but = "<button onclick='commentCate()' class='btn btn-success  center' name='btn_save' id='btn_save' style='font-size:18px'>提交</button>";
+            $('#dataButton').html(but);
             $('#contentData').css('display','block')
         }
         if(type ==3){
-            var time = "<div style='margin: 5px;font-size: 16px;height:31px;'>设置评论数时间段&nbsp;&nbsp;&nbsp;<input type='text' id='timeSet' name='timeSet' style='position: absolute;height: 30px;right: 34%;height: 30px;width: 350px;' placeholder='6;2019-08-18 12:12:12;2019-08-25 12:12:58' /></div>" +
-                "<div class='col-sm-7' style='margin:20px;'><button onclick='commentTime()' class='btn btn-success  center' name='btn_save' id='btn_save' style='font-size:18px'>提交</button></div>";
+            var time = "<div style='margin: 5px;font-size: 16px;height:31px;'>设置评论数时间段&nbsp;&nbsp;&nbsp;<input type='text' id='timeSet' name='timeSet' style='position: absolute;height: 30px;right: 34%;height: 30px;width: 350px;' placeholder='6;2019-08-18 12:12:12;2019-08-25 12:12:58' /></div>" ;
+
             $('#contentData').html(time);
+            var but = "<div class='col-sm-7' style='margin:20px;'><button onclick='commentTime()' class='btn btn-success  center' name='btn_save' id='btn_save' style='font-size:18px'>提交</button></div>";
+            $('#dataButton').html(but);
             $('#contentData').css('display','block')
         }
     }
@@ -314,9 +325,12 @@ $post .= "<div class='col-sm-7' style='margin:20px;'><button onclick='commentPos
         $("input.inputCate").each(function(inde,element){
             var value = $(element).val();
             if(value){
-                var termId = $(element).attr('data-id');
-                arr[i] = termId+'='+value;
-                i++
+                // var termId = $(element).attr('data-id');
+                var termId = $(element).siblings("input.cateId:first").val();
+                if(termId){
+                    arr[i] = termId+'='+value;
+                    i++
+                }
             }
         });
         $.ajax({
@@ -343,9 +357,12 @@ $post .= "<div class='col-sm-7' style='margin:20px;'><button onclick='commentPos
         $("input.inputPost").each(function(inde,element){
             var value = $(element).val();
             if(value){
-                var termId = $(element).attr('data-id');
-                arr[i] = termId+'='+value;
-                i++
+                // var termId = $(element).attr('data-id');
+                var termId = $(element).siblings("input.postId:first").val();
+                if(termId){
+                    arr[i] = termId+'='+value;
+                    i++
+                }
             }
         });
         $.ajax({
@@ -365,6 +382,17 @@ $post .= "<div class='col-sm-7' style='margin:20px;'><button onclick='commentPos
                 }
             }
         });
+    }
+    function addInput(type){
+        //type  1-添加文章 2-添加栏目
+        if(type ==1){
+            var content  = "<div style='margin: 5px;font-size: 16px;height:31px;'><input style='height: 30px;width: 350px;' type='text' placeholder='请填写文章ID' class='postId' oninput = \"value=value.replace(/[^\\d]/g,'')\" /> &nbsp;&nbsp;&nbsp;<input type='text' class='inputPost' name='target[]'  style='position: absolute;height: 30px;right: 34%;width: 350px;'  /></div>";
+            $('#contentData').append(content);
+        }
+        if(type ==2){
+            var content  = "<div style='margin: 5px;font-size: 16px;height:31px;'><input style='height: 30px;width: 350px;' type='text' placeholder='请填写栏目标签ID' class='cateId' oninput = \"value=value.replace(/[^\\d]/g,'')\" /> &nbsp;&nbsp;&nbsp;<input type='text' class='inputCate' name='target[]'  style='position: absolute;height: 30px;right: 34%;width: 350px;'  /></div>";
+            $('#contentData').append(content);
+        }
     }
 </script>
 </body>
