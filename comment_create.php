@@ -111,7 +111,7 @@ require_once './db.php';
                         break;
                     }
                     //获取栏目下的文章id
-                    $postIds = $dbh->query("select object_id from wp_term_relationships where term_taxonomy_id = $taxId");
+                    $postIds = $dbh->query("select tr.object_id from wp_term_relationships tr left join wp_posts p on p.ID = tr.object_id where tr.term_taxonomy_id = $taxId and p.post_status = 'publish'")->rowCount();
                     if(!$postIds){
                         $isPost = 1;
                         break;
@@ -124,7 +124,7 @@ require_once './db.php';
             die(json_encode(['code'=>0,'msg'=>'该栏目没有文章（无关联id）']));
         }
         if($isPost ==1){
-            die(json_encode(['code'=>0,'msg'=>'该栏目下没有文章']));
+            die(json_encode(['code'=>0,'msg'=>'某栏目下没有已发布文章']));
         }
         foreach($array as $t => $y){//评论生成
             $termId = $y['termId'];
@@ -134,7 +134,7 @@ require_once './db.php';
             //获取关联id
             $taxId = $dbh->query("select * from wp_term_taxonomy where term_id = $termId limit 1")->fetch()['term_taxonomy_id'];
             //获取栏目下的文章id
-            $postIds = $dbh->query("select object_id from wp_term_relationships where term_taxonomy_id = $taxId");
+            $postIds = $dbh->query("select tr.object_id from wp_term_relationships tr left join wp_posts p on p.ID = tr.object_id where tr.term_taxonomy_id = $taxId and p.post_status = 'publish'");
             $count = $postIds->rowCount();//文章数
             $postIds = $postIds->fetchAll();
             $ids = [];
@@ -178,13 +178,13 @@ require_once './db.php';
             $commentBegin = strtotime($arr[3]);//评论开始时间
             $commentEnd = strtotime($arr[4]);//评论结束时间
             //获取时间段内的文章id
-            $sql = "select ID from wp_posts where unix_timestamp(post_date) between $beginTime and $endTime";
+            $sql = "select ID from wp_posts where unix_timestamp(post_date) between $beginTime and $endTime and post_status = 'publish'";
             $result = $dbh->query($sql);
             $count = $result->rowCount();
             $result = $result->fetchAll();
             $ids = [];
             if(!$count){
-                die(json_encode(['code'=>0,'msg'=>'该时间段内没有文章']));
+                die(json_encode(['code'=>0,'msg'=>'该时间段内没有已发布文章']));
             }
             $comment = $dbh->query("select * from wp_comment_data ");
             if(!$comment){
@@ -291,7 +291,8 @@ require_once './db.php';
             $('#contentData').css('display','block')
         }
         if(type ==3){
-            var time = "<div style='margin: 5px;font-size: 16px;height:31px;'>设置评论数时间段&nbsp;&nbsp;&nbsp;<input type='text' id='timeSet' name='timeSet' style='position: absolute;height: 30px;right: 17%;width: 640px;' placeholder='6;2019-08-18 12:12:12;2019-08-25 12:12:58;2019-06-18 12:12:12;2019-06-25 12:12:58' /></div>" ;
+            var time = "<div style='margin: 5px;font-size: 16px;height:31px;'>设置评论数时间段&nbsp;&nbsp;&nbsp;<input type='text' id='timeSet' name='timeSet' style='position: absolute;height: 30px;right: 17%;width: 640px;' title='评论总数;文章开始时间;文章结束时间;评论开始时间;评论结束时间' placeholder='6;2019-08-18 12:12:12;2019-08-25 12:12:58;2019-06-18 12:12:12;2019-06-25 12:12:58' /><br/><br/>" +
+                "<span>填写规则：评论总数;文章开始时间;文章结束时间;评论开始时间;评论结束时间</span></div>" ;
 
             $('#contentData').html(time);
             var but = "<div class='col-sm-7' style='margin:20px;'><button onclick='commentTime()' class='btn btn-success  center' name='btn_save' id='btn_save' style='font-size:18px'>提交</button></div>";
