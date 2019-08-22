@@ -80,6 +80,13 @@ require_once './db.php';
                     $userIds[]= $userId;
                 }
             }
+            $comment_count = $dbh->query("select comment_count from wp_posts where ID = $postId")->fetch()['comment_count'];
+            if($comment_count){
+                $comment_count +=$total;
+            }else{
+                $comment_count = $total;
+            }
+            $dbh->query("update wp_posts set comment_count = $comment_count where ID = $postId");
         }
         die(json_encode(['code'=>1]));
     }
@@ -160,6 +167,13 @@ require_once './db.php';
                 $date_gmt = date('Y-m-d H:i:s',($time-3600*8));
                 $sql = "insert into wp_comments(comment_post_ID,comment_author,comment_date,comment_date_gmt,comment_content,user_id) value('$postId','$username','$date','$date_gmt','$comment','$userId')";
                 $dbh->query($sql);
+                $comment_count = $dbh->query("select comment_count from wp_posts where ID = $postId")->fetch()['comment_count'];
+                if($comment_count){
+                    $comment_count +=1;
+                }else{
+                    $comment_count = 1;
+                }
+                $dbh->query("update wp_posts set comment_count = $comment_count where ID = $postId");
             }
         }
         die(json_encode(['code'=>1]));
@@ -212,6 +226,13 @@ require_once './db.php';
                 $date_gmt = date('Y-m-d H:i:s',($time-3600*8));
                 $sql = "insert into wp_comments(comment_post_ID,comment_author,comment_date,comment_date_gmt,comment_content,user_id) value('$postId','$username','$date','$date_gmt','$comment','$userId')";
                 $dbh->query($sql);
+                $comment_count = $dbh->query("select comment_count from wp_posts where ID = $postId")->fetch()['comment_count'];
+                if($comment_count){
+                    $comment_count +=1;
+                }else{
+                    $comment_count = 1;
+                }
+                $dbh->query("update wp_posts set comment_count = $comment_count where ID = $postId");
             }
             $data = ['code'=>1];
         }
