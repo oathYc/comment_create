@@ -243,13 +243,11 @@ require_once './db.php';
                 <tr>
                     <td>
                         &nbsp;&nbsp;&nbsp;<button class="btn btn-success  center" onclick="getContent(1)">开启</button>
-                        <div id="postContent" style="display: none;"><?php echo $post?></div>
                         &nbsp;&nbsp;&nbsp;<button class="btn btn-success  center" onclick="getContent(4)">关闭</button>
                         &nbsp;&nbsp;&nbsp;<button class="btn btn-success  center" onclick="addInput(1)">添加</button>
                     </td>
                     <td>
                         &nbsp;&nbsp;&nbsp;<button class="btn btn-success  center" onclick="getContent(2)">开启</button>
-                        <div id="category" style="display: none;"><?php echo $html?></div>
                         &nbsp;&nbsp;&nbsp;<button class="btn btn-success  center" onclick="getContent(4)">关闭</button>
                         &nbsp;&nbsp;&nbsp;<button class="btn btn-success  center" onclick="addInput(2)">添加</button>
                     </td>
@@ -271,6 +269,7 @@ require_once './db.php';
     function getContent(type){
         //type 1-文章添加 2-标签栏目添加 3-时间段添加 4-关闭
         if(type ==4){
+            $('#dataButton').html('');
             $('#contentData').css('display','none')
         }
         if(type ==1){
@@ -290,9 +289,11 @@ require_once './db.php';
             $('#contentData').css('display','block')
         }
         if(type ==3){
-            var time = "<div style='margin: 5px;font-size: 16px;height:31px;'>设置评论数时间段&nbsp;&nbsp;&nbsp;<input type='text' id='timeSet' name='timeSet' style='position: absolute;height: 30px;right: 34%;height: 30px;width: 350px;' placeholder='6;2019-08-18 12:12:12;2019-08-25 12:12:58' /></div>" +
-                "<div class='col-sm-7' style='margin:20px;'><button onclick='commentTime()' class='btn btn-success  center' name='btn_save' id='btn_save' style='font-size:18px'>提交</button></div>";
+            var time = "<div style='margin: 5px;font-size: 16px;height:31px;'>设置评论数时间段&nbsp;&nbsp;&nbsp;<input type='text' id='timeSet' name='timeSet' style='position: absolute;height: 30px;right: 34%;height: 30px;width: 350px;' placeholder='6;2019-08-18 12:12:12;2019-08-25 12:12:58' /></div>" ;
+
             $('#contentData').html(time);
+            var but = "<div class='col-sm-7' style='margin:20px;'><button onclick='commentTime()' class='btn btn-success  center' name='btn_save' id='btn_save' style='font-size:18px'>提交</button></div>";
+            $('#dataButton').html(but);
             $('#contentData').css('display','block')
         }
     }
