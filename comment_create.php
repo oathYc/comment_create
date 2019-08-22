@@ -169,12 +169,14 @@ require_once './db.php';
     if(isset($_POST['timeSet']) && $_POST['timeSet']){
         $timeSet = $_POST['timeSet'];
         $arr = explode(';',$timeSet);
-        if(count($arr) !=3){
+        if(count($arr) !=5){
             $data = ['code'=>0,'msg'=>'内容格式错误'];
         }else{
             $total = $arr[0];
-            $beginTime = strtotime($arr[1]);
-            $endTime = strtotime($arr[2]);
+            $beginTime = strtotime($arr[1]);//文章发布开始时间
+            $endTime = strtotime($arr[2]);//文章发布结束时间
+            $commentBegin = strtotime($arr[3]);//评论开始时间
+            $commentEnd = strtotime($arr[4]);//评论结束时间
             //获取时间段内的文章id
             $sql = "select ID from wp_posts where unix_timestamp(post_date) between $beginTime and $endTime";
             $result = $dbh->query($sql);
@@ -205,7 +207,7 @@ require_once './db.php';
                 $comment = $dbh->query("select * from wp_comment_data order by rand() limit 1");
                 $comment = $comment->fetch();
                 $comment = $comment['comment'];
-                $time = rand($beginTime,$endTime);
+                $time = rand($commentBegin,$commentEnd);
                 $date = date('Y-m-d H:i:s',$time);
                 $date_gmt = date('Y-m-d H:i:s',($time-3600*8));
                 $sql = "insert into wp_comments(comment_post_ID,comment_author,comment_date,comment_date_gmt,comment_content,user_id) value('$postId','$username','$date','$date_gmt','$comment','$userId')";
@@ -289,7 +291,7 @@ require_once './db.php';
             $('#contentData').css('display','block')
         }
         if(type ==3){
-            var time = "<div style='margin: 5px;font-size: 16px;height:31px;'>设置评论数时间段&nbsp;&nbsp;&nbsp;<input type='text' id='timeSet' name='timeSet' style='position: absolute;height: 30px;right: 34%;height: 30px;width: 350px;' placeholder='6;2019-08-18 12:12:12;2019-08-25 12:12:58' /></div>" ;
+            var time = "<div style='margin: 5px;font-size: 16px;height:31px;'>设置评论数时间段&nbsp;&nbsp;&nbsp;<input type='text' id='timeSet' name='timeSet' style='position: absolute;height: 30px;right: 17%;width: 640px;' placeholder='6;2019-08-18 12:12:12;2019-08-25 12:12:58;2019-06-18 12:12:12;2019-06-25 12:12:58' /></div>" ;
 
             $('#contentData').html(time);
             var but = "<div class='col-sm-7' style='margin:20px;'><button onclick='commentTime()' class='btn btn-success  center' name='btn_save' id='btn_save' style='font-size:18px'>提交</button></div>";
