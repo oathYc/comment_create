@@ -76,6 +76,7 @@ require_once './db.php';
                 $date_gmt = date('Y-m-d H:i:s',($time-3600*8));
                 $sql = "insert into wp_comments(comment_post_ID,comment_author,comment_date,comment_date_gmt,comment_content,user_id) value('$postId','$username','$date','$date_gmt','$comment','$userId')";
                 $dbh->query($sql);
+                redisSetPosts($dbh,$postId,$dbh->lastInsertId());
                 if(!in_array($userId,$userIds)){
                     $userIds[]= $userId;
                 }
@@ -167,6 +168,7 @@ require_once './db.php';
                 $date_gmt = date('Y-m-d H:i:s',($time-3600*8));
                 $sql = "insert into wp_comments(comment_post_ID,comment_author,comment_date,comment_date_gmt,comment_content,user_id) value('$postId','$username','$date','$date_gmt','$comment','$userId')";
                 $dbh->query($sql);
+                redisSetPosts($dbh,$postId,$dbh->lastInsertId());
                 $comment_count = $dbh->query("select comment_count from wp_posts where ID = $postId")->fetch()['comment_count'];
                 if($comment_count){
                     $comment_count +=1;
@@ -226,6 +228,7 @@ require_once './db.php';
                 $date_gmt = date('Y-m-d H:i:s',($time-3600*8));
                 $sql = "insert into wp_comments(comment_post_ID,comment_author,comment_date,comment_date_gmt,comment_content,user_id) value('$postId','$username','$date','$date_gmt','$comment','$userId')";
                 $dbh->query($sql);
+                redisSetPosts($dbh,$postId,$dbh->lastInsertId());
                 $comment_count = $dbh->query("select comment_count from wp_posts where ID = $postId")->fetch()['comment_count'];
                 if($comment_count){
                     $comment_count +=1;
@@ -233,11 +236,25 @@ require_once './db.php';
                     $comment_count = 1;
                 }
                 $dbh->query("update wp_posts set comment_count = $comment_count where ID = $postId");
+
             }
             $data = ['code'=>1];
         }
         die(json_encode($data));
     }
+?>
+<?php
+//更新文章的缓存数据设置
+//文章评论数及文章评论内容缓存
+function redisSetPosts($dbh,$postId,$commentId){
+    //文章评论数数
+    $posts = $dbh->query("select * from wp_posts where ID = $postId")->fetch();
+    $post = sanitize_post($posts,'raw' );
+    wp_cache_add( $postId,$post,'posts' );
+    //评论内容
+    $comment = $dbh->query("select * from wp_comments where comment_ID = $commentId")->fetch();
+    wp_cache_add($commentId,$comment,'comment' );
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
