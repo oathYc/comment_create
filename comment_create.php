@@ -1,4 +1,5 @@
 <?php
+require_once './../wp-config.php';
 require_once './db.php';
 ?>
 <?php //获取栏目信息
