@@ -1,5 +1,5 @@
 <?php
-require_once './../wp-config.php';
+//require_once './../wp-config.php';
 require_once './db.php';
 ?>
 <?php //获取栏目信息
@@ -49,6 +49,7 @@ require_once './db.php';
         if($userTotal < $max){
             die(json_encode(['code'=>0,'msg'=>'用户集数量不够']));
         }
+        $return = [];
         foreach($array as $p => $y){
             $postId = $y['postId'];
             $total = $y['total'];
@@ -75,9 +76,12 @@ require_once './db.php';
                 $time = rand($beginTime,$endTime);
                 $date = date('Y-m-d H:i:s',$time);
                 $date_gmt = date('Y-m-d H:i:s',($time-3600*8));
-                $sql = "insert into wp_comments(comment_post_ID,comment_author,comment_date,comment_date_gmt,comment_content,user_id) value('$postId','$username','$date','$date_gmt','$comment','$userId')";
-                $dbh->query($sql);
-                redisSetPosts($dbh,$postId,$dbh->lastInsertId());
+                if($i == ($total -1)){
+                    $return[] = ['postId'=>$postId,'username'=>$username,'date'=>$date,'date_gmt'=>$date_gmt,'comment'=>$comment,'userId'=>$userId];
+                }else{
+                    $sql = "insert into wp_comments(comment_post_ID,comment_author,comment_date,comment_date_gmt,comment_content,user_id) value('$postId','$username','$date','$date_gmt','$comment','$userId')";
+                    $dbh->query($sql);
+                }
                 if(!in_array($userId,$userIds)){
                     $userIds[]= $userId;
                 }
@@ -90,7 +94,7 @@ require_once './db.php';
             }
             $dbh->query("update wp_posts set comment_count = $comment_count where ID = $postId");
         }
-        die(json_encode(['code'=>1]));
+        die(json_encode(['code'=>1,'return'=>$return]));
     }
 ?>
 <?php //栏目标签文章添加
@@ -135,6 +139,7 @@ require_once './db.php';
         if($isPost ==1){
             die(json_encode(['code'=>0,'msg'=>'某栏目下没有已发布文章']));
         }
+        $pids = [];
         foreach($array as $t => $y){//评论生成
             $termId = $y['termId'];
             $total = $y['total'];
@@ -169,7 +174,6 @@ require_once './db.php';
                 $date_gmt = date('Y-m-d H:i:s',($time-3600*8));
                 $sql = "insert into wp_comments(comment_post_ID,comment_author,comment_date,comment_date_gmt,comment_content,user_id) value('$postId','$username','$date','$date_gmt','$comment','$userId')";
                 $dbh->query($sql);
-                redisSetPosts($dbh,$postId,$dbh->lastInsertId());
                 $comment_count = $dbh->query("select comment_count from wp_posts where ID = $postId")->fetch()['comment_count'];
                 if($comment_count){
                     $comment_count +=1;
@@ -177,9 +181,19 @@ require_once './db.php';
                     $comment_count = 1;
                 }
                 $dbh->query("update wp_posts set comment_count = $comment_count where ID = $postId");
+                if(!in_array($postId,$pids)){
+                    $pids[] = $postId;
+                }
             }
         }
-        die(json_encode(['code'=>1]));
+        $return = [];
+        foreach($pids as $t => $y){
+            $last  = $dbh->query("select * from wp_comments where comment_post_ID = $y order by comment_ID desc limit 1")->fetch();
+            $return[] = ['postId'=>$last['comment_post_ID'],'username'=>$last['comment_author'],'date'=>$last['comment_date'],'date_gmt'=>$last['comment_date_gmt'],'comment'=>$last['comment_content'],'userId'=>$last['user_id']];
+            $commentId = $last['comment_ID'];
+            $dbh->query("delete from wp_comments where comment_ID = $commentId");
+        }
+        die(json_encode(['code'=>1,'return'=>$return]));
     }
 ?>
 <?php //时间段评论添加
@@ -210,6 +224,7 @@ require_once './db.php';
             foreach($result as $k => $v){
                 $ids[]= $v['ID'];
             }
+            $pids = [];
             for($i=0;$i<$total;$i++){
                 $key = rand(0,$count-1);//随机生成键文章id
                 $postId = $ids[$key];//获取对应键的文章id
@@ -229,7 +244,6 @@ require_once './db.php';
                 $date_gmt = date('Y-m-d H:i:s',($time-3600*8));
                 $sql = "insert into wp_comments(comment_post_ID,comment_author,comment_date,comment_date_gmt,comment_content,user_id) value('$postId','$username','$date','$date_gmt','$comment','$userId')";
                 $dbh->query($sql);
-                redisSetPosts($dbh,$postId,$dbh->lastInsertId());
                 $comment_count = $dbh->query("select comment_count from wp_posts where ID = $postId")->fetch()['comment_count'];
                 if($comment_count){
                     $comment_count +=1;
@@ -237,25 +251,21 @@ require_once './db.php';
                     $comment_count = 1;
                 }
                 $dbh->query("update wp_posts set comment_count = $comment_count where ID = $postId");
-
+                if(!in_array($postId,$pids)){
+                    $pids[] = $postId;
+                }
             }
-            $data = ['code'=>1];
+            $return = [];
+            foreach($pids as $t => $y){
+                $last  = $dbh->query("select * from wp_comments where comment_post_ID = $y order by comment_ID desc limit 1")->fetch();
+                $return[] = ['postId'=>$last['comment_post_ID'],'username'=>$last['comment_author'],'date'=>$last['comment_date'],'date_gmt'=>$last['comment_date_gmt'],'comment'=>$last['comment_content'],'userId'=>$last['user_id']];
+                $commentId = $last['comment_ID'];
+                $dbh->query("delete from wp_comments where comment_ID = $commentId");
+            }
+            die(json_encode(['code'=>1,'return'=>$return]));
         }
         die(json_encode($data));
     }
-?>
-<?php
-//更新文章的缓存数据设置
-//文章评论数及文章评论内容缓存
-function redisSetPosts($dbh,$postId,$commentId){
-    //文章评论数数
-    $posts = $dbh->query("select * from wp_posts where ID = $postId")->fetch();
-    $post = sanitize_post($posts,'raw' );
-    wp_cache_add( $postId,$post,'posts' );
-    //评论内容
-    $comment = $dbh->query("select * from wp_comments where comment_ID = $commentId")->fetch();
-    wp_cache_add($commentId,$comment,'comment' );
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -353,8 +363,16 @@ function redisSetPosts($dbh,$postId,$commentId){
             type:'post',
             success:function(e){
                 if(e.code==1){
+                    $.ajax({
+                        url:'./../wp-comments-post.php',
+                        type:'post',
+                        data:{
+                            return:e.return,
+                            auto:1,
+                        }
+                    });
                     alert('操作成功');
-                    window.location.reload();
+                    // window.location.reload();
                 }else{
                     alert(e.msg);
                 }
@@ -385,8 +403,16 @@ function redisSetPosts($dbh,$postId,$commentId){
             type:'post',
             success:function(e){
                 if(e.code==1){
+                    $.ajax({
+                        url:'./../wp-comments-post.php',
+                        type:'post',
+                        data:{
+                            return:e.return,
+                            auto:1,
+                        }
+                    });
                     alert('操作成功');
-                    window.location.reload();
+                    // window.location.reload();
                 }else{
                     alert(e.msg);
                 }
@@ -417,8 +443,16 @@ function redisSetPosts($dbh,$postId,$commentId){
             type:'post',
             success:function(e){
                 if(e.code==1){
+                    $.ajax({
+                        url:'./../wp-comments-post.php',
+                        type:'post',
+                        data:{
+                            return:e.return,
+                            auto:1,
+                        }
+                    });
                     alert('操作成功');
-                    window.location.reload();
+                    // window.location.reload();
                 }else{
                     alert(e.msg);
                 }

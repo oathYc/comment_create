@@ -1,6 +1,6 @@
 <?php
 require_once './db.php';
-
+require_once './../wp-config.php';
 $time = time()- 30*86400;
 $sql = "select ID from wp_posts where unix_timestamp(post_date) > $time and post_status = 'publish'";
 $posts = $dbh->query($sql)->fetchAll();
@@ -21,4 +21,6 @@ foreach($posts as $k => $v){
         $sql = "insert into wp_postmeta(`post_id`,`meta_key`,`meta_value`) value($postId,'post_views_count','$add')";
     }
     $dbh->query($sql);
+    delete_post_meta($postId, 'post_views_count');
+    add_post_meta($postId, 'post_views_count', $add);
 }
